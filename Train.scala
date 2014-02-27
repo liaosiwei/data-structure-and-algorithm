@@ -39,7 +39,7 @@ object Train {
         var left = 0
         for(j <- 0 until resList.length) {
           val right = out.indexOf(in(i), resList(j).head+1)
-          left = out.substring(0, resList(j).head+1).indexOf(in(i))
+          left = out.substring(0, resList(j).head).indexOf(in(i))
           if (right != -1) {
             flag = true
             right +=: resList(j)
