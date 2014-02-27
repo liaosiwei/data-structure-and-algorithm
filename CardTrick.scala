@@ -1,6 +1,6 @@
-package recfun
-
 import collection.mutable.ListBuffer
+import java.io.{File, PrintWriter}
+
 /**
  * User: sweeliao@gmail.com
  * Date: 14-2-27
@@ -22,47 +22,58 @@ object CardTrick {
     else if (in(mid) < t) binarySearch(in, mid+1, right, t)
     else mid
   }
-  def getLongList(in: List[List[Int]]): List[Int] = in.tail.tail match {
-    case Nil => if (in.head.length > in.tail.head.length) in.head else in.tail.head
-    case _ => {
-      val temp = getLongList(in.tail)
-      if (in.head.length > temp.length) in.head else temp
-    }
-  }
 
-  def cardTrick(in: Array[Int]) = {
-    val len = in.length
-    val sorted = in.sorted
-    val bsearch = binarySearch(sorted, 0, len, _: Int)
+  def longestIncreasingSubsequence(in: List[Int])(implicit ordering: Ordering[Int]): List[Int] = {
+    // We can use the following instead:
+    // zipWithIndex.map(t => (t._2, List(t._1))).toMap
+    // http://stackoverflow.com/questions/17828431/convert-scalas-list-into-map-with-indicies-as-keys
+    def init(i: Int, l: List[Int], m: Map[Int, List[Int]]): Map[Int, List[Int]] =
+      if (l.isEmpty) m
+      else init(i + 1, l.tail, m + (i -> List(l.head)))
 
-    def getAllLength(in: Array[Int]): List[List[Int]] = {
-      val resList: ListBuffer[ListBuffer[Int]] = ListBuffer.empty[ListBuffer[Int]]
-      resList += ListBuffer(in.head)
-
-      for (i <- 1 until len) {
-        val place = bsearch(in(i))
-        if (place == 0) ListBuffer(in(i)) +=: resList
+    def loop(i: Int, l: List[Int], m: Map[Int, List[Int]]): List[Int] =
+      if (l.isEmpty) m.maxBy(_._2.length)._2.reverse
+      else {
+        val f = m.filter(p => p._1 < i && ordering.lt(p._2.head, l.head))
+        if (f.isEmpty) loop(i + 1, l.tail, m)
         else {
-          val before = sorted(place - 1)
-          var flag = false
-          for (j <- 0 until resList.length) {
-            if (resList(j).head == before) {
-              flag = true
-              in(i) +=: resList(j)
-            }
-          }
-          if (!flag) ListBuffer(in(i)) +=: resList
+          val (_, ll) = f.maxBy(_._2.length)
+          loop(i + 1, l.tail, m + (i -> (l.head::ll)))
         }
       }
-      resList.map(x=>x.toList).toList
-    }
-    val maxList = getLongList(getAllLength(in))
+
+    if (in.isEmpty) List.empty
+    else loop(1, in.tail, init(0, in, Map[Int, List[Int]]()))
+  }
+
+  def cardTrick(in: Array[Int], w: PrintWriter) = {
+    val len = in.length
+    val sorted = in.sorted
+
+    val bsearch = binarySearch(sorted, 0, len, _: Int)
+
+    val maxList = longestIncreasingSubsequence(in.toList)
     val count = sorted.length-maxList.length
-    println(count)
+    w.write(count + "\n")
     val first = bsearch(maxList.last)
     val second = bsearch(maxList.head)
-    for (i <- 0 until first) println(sorted(first-i-1) + "B")
-    for (i <- second+1 until sorted.length) println(sorted(i) + "T")
+    for (i <- 0 until first) w.write(sorted(first-i-1) + "B\n")
+    for (i <- second+1 until sorted.length) w.write(sorted(i) + "T\n")
     count
+  }
+
+/*  def readLine(str: String): List[Int] = str match {
+    case "" => Nil
+    case _ => if (str.head.isWhitespace)
+  }*/
+
+  def main(args: Array[String]): Unit = {
+    val f = io.Source.fromFile("E:\\test.txt").getLines()
+    val writer = new PrintWriter(new File("E:\\output.txt"))
+    for (line <- f) {
+      if (line == ";") writer.write(";\n")
+      else if (!line.isEmpty) cardTrick(line.split(" ").map(x=>x.toInt), writer)
+    }
+    writer.close()
   }
 }
