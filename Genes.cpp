@@ -33,6 +33,7 @@ int main(int argc, char** argv) {
 			outvec.reserve(20000);
 			convert(invec, outvec);
 			int max_len = 0, inbegin = -1, outbegin = -1;
+
 			for(size_t i = 0; i < invec.size(); i++) {
 				int k = i, count = 0, temp_len = 0;
 				for (size_t j = 0; j < outvec.size(); j++) {
@@ -49,7 +50,11 @@ int main(int argc, char** argv) {
 						if (k != i) {
 							count++;
 						}
-						if (count > 2) break;
+						if (count > 2) {
+							k = i;
+							count = 0;
+							temp_len = 0;	
+						}
 					}
 				}
 			}
@@ -72,3 +77,4 @@ int main(int argc, char** argv) {
 	outputfile.close();
 	cout << "well done!" << endl;
 }
+
